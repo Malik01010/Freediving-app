@@ -4,6 +4,7 @@ struct SessionDetailView: View {
     let sessionType: SessionType
     let personalBest: Int
     @State private var showingSession = false
+    @State private var showingBreathHoldTest = false
 
     private var rounds: [TrainingRound] {
         switch sessionType {
@@ -92,16 +93,13 @@ struct SessionDetailView: View {
 
                     // Start button
                     Button {
-                        showingSession = true
+                        if sessionType == .breathHoldTest {
+                            showingBreathHoldTest = true
+                        } else {
+                            showingSession = true
+                        }
                     } label: {
-                        Text("Start Session")
-                            .font(.appSubheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(Color.appBackground)
-                            .frame(maxWidth: .infinity)
-                            .padding(Spacing.md)
-                            .background(Color.appTeal)
-                            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
+                        ActionButton(title: "Start Session", style: .primary)
                     }
                     .padding(.horizontal, Spacing.md)
                     .padding(.bottom, Spacing.xl)
@@ -109,8 +107,19 @@ struct SessionDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .fullScreenCover(isPresented: $showingBreathHoldTest) {
+            BreathHoldTestView()
+        }
         .fullScreenCover(isPresented: $showingSession) {
-            ActiveSessionView(sessionType: sessionType, personalBest: personalBest)
+            if let breathConfig = BreathingSessionFactory.steps(for: sessionType) {
+                BreathingExerciseView(
+                    sessionType: sessionType,
+                    steps: breathConfig.steps,
+                    totalDurationSeconds: breathConfig.totalSeconds
+                )
+            } else {
+                ActiveSessionView(sessionType: sessionType, personalBest: personalBest)
+            }
         }
     }
 
