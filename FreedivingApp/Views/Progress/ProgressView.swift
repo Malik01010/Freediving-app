@@ -19,6 +19,20 @@ struct ProgressView: View {
         completedSessions.reduce(0) { $0 + $1.durationSeconds } / 60
     }
 
+    private var streak: Int {
+        StreakService.currentStreak(from: sessions)
+    }
+
+    private var weeklyData: [(date: Date, count: Int)] {
+        StreakService.lastSevenDays(from: sessions)
+    }
+
+    private let dayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "EEE"
+        return f
+    }()
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -26,24 +40,52 @@ struct ProgressView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Spacing.lg) {
 
-                        // Summary pills
+                        // Summary stats
                         HStack(spacing: Spacing.sm) {
+                            StatPill(label: "Streak", value: streak > 0 ? "\(streak)d" : "–")
                             StatPill(label: "This Week", value: "\(thisWeekCount)")
-                            StatPill(label: "Total Sessions", value: "\(completedSessions.count)")
                             StatPill(label: "Total Time", value: "\(totalMinutes)m")
                         }
                         .padding(.horizontal, Spacing.md)
                         .padding(.top, Spacing.md)
 
-                        // Personal Best chart
-                        if personalBests.count >= 2 {
-                            VStack(alignment: .leading, spacing: Spacing.sm) {
-                                Text("PERSONAL BEST OVER TIME")
-                                    .font(.appCaption).fontWeight(.semibold)
-                                    .foregroundStyle(Color.appTextMuted)
-                                    .tracking(1.5)
-                                    .padding(.horizontal, Spacing.md)
+                        // Weekly sessions bar chart
+                        ChartSection(title: "SESSIONS THIS WEEK") {
+                            Chart(weeklyData, id: \.date) { day in
+                                BarMark(
+                                    x: .value("Day", dayFormatter.string(from: day.date)),
+                                    y: .value("Sessions", day.count)
+                                )
+                                .foregroundStyle(
+                                    day.count > 0 ? Color.appTeal : Color.appCard
+                                )
+                                .cornerRadius(4)
+                            }
+                            .chartXAxis {
+                                AxisMarks(values: .automatic) { _ in
+                                    AxisValueLabel()
+                                        .foregroundStyle(Color.appTextMuted)
+                                        .font(.appCaption)
+                                }
+                            }
+                            .chartYAxis {
+                                AxisMarks(values: .stride(by: 1)) { value in
+                                    AxisValueLabel {
+                                        if let v = value.as(Int.self) {
+                                            Text("\(v)")
+                                                .foregroundStyle(Color.appTextMuted)
+                                                .font(.appCaption)
+                                        }
+                                    }
+                                    AxisGridLine().foregroundStyle(Color.appTextMuted.opacity(0.1))
+                                }
+                            }
+                            .frame(height: 140)
+                        }
 
+                        // Personal Best line chart
+                        if personalBests.count >= 2 {
+                            ChartSection(title: "PERSONAL BEST OVER TIME") {
                                 Chart(personalBests) { pb in
                                     LineMark(
                                         x: .value("Date", pb.date),
@@ -51,16 +93,26 @@ struct ProgressView: View {
                                     )
                                     .foregroundStyle(Color.appTeal)
                                     .interpolationMethod(.catmullRom)
+                                    .lineStyle(StrokeStyle(lineWidth: 2))
 
                                     AreaMark(
                                         x: .value("Date", pb.date),
                                         y: .value("Seconds", pb.seconds)
                                     )
-                                    .foregroundStyle(Color.appTeal.opacity(0.1))
+                                    .foregroundStyle(Color.appTeal.opacity(0.08))
+
+                                    PointMark(
+                                        x: .value("Date", pb.date),
+                                        y: .value("Seconds", pb.seconds)
+                                    )
+                                    .foregroundStyle(Color.appTeal)
+                                    .symbolSize(30)
                                 }
                                 .chartXAxis {
-                                    AxisMarks(values: .automatic) {
-                                        AxisValueLabel().foregroundStyle(Color.appTextMuted)
+                                    AxisMarks(values: .automatic) { _ in
+                                        AxisValueLabel()
+                                            .foregroundStyle(Color.appTextMuted)
+                                            .font(.appCaption)
                                     }
                                 }
                                 .chartYAxis {
@@ -72,31 +124,26 @@ struct ProgressView: View {
                                                     .font(.appCaption)
                                             }
                                         }
+                                        AxisGridLine().foregroundStyle(Color.appTextMuted.opacity(0.1))
                                     }
                                 }
                                 .frame(height: 180)
-                                .padding(Spacing.md)
-                                .background(Color.appCard)
-                                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
-                                .padding(.horizontal, Spacing.md)
                             }
                         } else {
-                            EmptyChartPlaceholder(message: "Complete a Breath Hold Test to start tracking your PB")
+                            EmptyChartPlaceholder(
+                                message: "Complete a Breath Hold Test to start tracking your PB"
+                            )
                         }
 
-                        // Sessions per type
+                        // Sessions by type breakdown
                         if !completedSessions.isEmpty {
                             VStack(alignment: .leading, spacing: Spacing.sm) {
-                                Text("SESSIONS BY TYPE")
-                                    .font(.appCaption).fontWeight(.semibold)
-                                    .foregroundStyle(Color.appTextMuted)
-                                    .tracking(1.5)
-                                    .padding(.horizontal, Spacing.md)
+                                SectionHeader(title: "SESSIONS BY TYPE")
 
                                 let grouped = Dictionary(grouping: completedSessions, by: \.type)
                                 ForEach(SessionType.allCases, id: \.self) { type in
                                     if let count = grouped[type]?.count, count > 0 {
-                                        HStack {
+                                        HStack(spacing: Spacing.md) {
                                             Image(systemName: type.icon)
                                                 .foregroundStyle(Color.appTeal)
                                                 .frame(width: 24)
@@ -104,9 +151,22 @@ struct ProgressView: View {
                                                 .font(.appBody)
                                                 .foregroundStyle(Color.appTextPrimary)
                                             Spacer()
+                                            // Mini bar
+                                            let max = grouped.values.map(\.count).max() ?? 1
+                                            GeometryReader { geo in
+                                                Capsule()
+                                                    .fill(Color.appTeal.opacity(0.2))
+                                                    .frame(width: geo.size.width)
+                                                Capsule()
+                                                    .fill(Color.appTeal)
+                                                    .frame(width: geo.size.width * (CGFloat(count) / CGFloat(max)))
+                                            }
+                                            .frame(width: 60, height: 6)
+
                                             Text("\(count)")
                                                 .font(.appSubheadline)
                                                 .foregroundStyle(Color.appTeal)
+                                                .frame(width: 24, alignment: .trailing)
                                         }
                                         .padding(Spacing.sm)
                                         .background(Color.appCard)
@@ -127,6 +187,24 @@ struct ProgressView: View {
     }
 }
 
+// MARK: - Chart Section wrapper
+struct ChartSection<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            SectionHeader(title: title)
+            content()
+                .padding(Spacing.md)
+                .background(Color.appCard)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+                .padding(.horizontal, Spacing.md)
+        }
+    }
+}
+
+// MARK: - Empty chart placeholder
 struct EmptyChartPlaceholder: View {
     let message: String
     var body: some View {

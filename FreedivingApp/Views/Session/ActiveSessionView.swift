@@ -29,6 +29,7 @@ struct ActiveSessionView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Query private var profiles: [UserProfile]
 
     @State private var currentRound = 1
     @State private var phase: SessionPhase = .rest
@@ -40,8 +41,12 @@ struct ActiveSessionView: View {
     @State private var currentSession: TrainingSession?
     @State private var showExitConfirm = false
 
-    private let haptics = HapticService()
-    private let audio = AudioCueService()
+    private let hapticService = HapticService()
+    private let audioService = AudioCueService()
+
+    // User preferences from profile
+    private var hapticsEnabled: Bool { profiles.first?.hapticsEnabled ?? true }
+    private var audioEnabled: Bool   { profiles.first?.audioCuesEnabled ?? true }
 
     private var rounds: [TrainingRound] {
         switch sessionType {
@@ -54,9 +59,14 @@ struct ActiveSessionView: View {
 
     private var totalRounds: Int { max(rounds.count, 1) }
 
+    private var nextRound: TrainingRound? {
+        guard phase == .hold, currentRound < rounds.count else { return nil }
+        return rounds[currentRound] // index = currentRound (next after current 1-indexed)
+    }
+
     private var progress: Double {
-        guard secondsRemaining > 0, let currentPhaseTotal = currentPhaseTotal else { return 0 }
-        return 1.0 - (Double(secondsRemaining) / Double(currentPhaseTotal))
+        guard let total = currentPhaseTotal, total > 0 else { return 0 }
+        return 1.0 - (Double(secondsRemaining) / Double(total))
     }
 
     private var currentPhaseTotal: Int? {
@@ -75,11 +85,9 @@ struct ActiveSessionView: View {
                     roundsCompleted: currentRound - 1,
                     totalRounds: totalRounds,
                     totalSeconds: totalSeconds
-                ) {
-                    dismiss()
-                }
+                ) { dismiss() }
             } else {
-                VStack(spacing: Spacing.xl) {
+                VStack(spacing: 0) {
                     // Top bar
                     HStack {
                         Button { showExitConfirm = true } label: {
@@ -92,7 +100,6 @@ struct ActiveSessionView: View {
                             RoundBadge(current: min(currentRound, totalRounds), total: totalRounds)
                         }
                         Spacer()
-                        // balance
                         Color.clear.frame(width: 24, height: 24)
                     }
                     .padding(.horizontal, Spacing.md)
@@ -118,20 +125,23 @@ struct ActiveSessionView: View {
                         }
                     }
 
+                    // Next round preview — shown during rest phase
+                    nextRoundPreview
+                        .frame(height: 52)
+                        .padding(.top, Spacing.md)
+
                     Spacer()
 
-                    // Controls
-                    HStack(spacing: Spacing.xl) {
-                        Button {
-                            isRunning ? pauseTimer() : startTimer()
-                        } label: {
-                            Image(systemName: isRunning ? "pause.fill" : "play.fill")
-                                .font(.system(size: 32))
-                                .foregroundStyle(Color.appTeal)
-                                .frame(width: 64, height: 64)
-                                .background(Color.appCard)
-                                .clipShape(Circle())
-                        }
+                    // Controls — pause/resume
+                    Button {
+                        isRunning ? pauseTimer() : startTimer()
+                    } label: {
+                        Image(systemName: isRunning ? "pause.fill" : "play.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(Color.appTeal)
+                            .frame(width: 64, height: 64)
+                            .background(Color.appCard)
+                            .clipShape(Circle())
                     }
                     .padding(.bottom, Spacing.xxl)
                 }
@@ -144,7 +154,35 @@ struct ActiveSessionView: View {
         }
     }
 
+    // MARK: - Next Round Preview
+    @ViewBuilder
+    private var nextRoundPreview: some View {
+        if let next = nextRound {
+            HStack(spacing: Spacing.xs) {
+                Text("Next →")
+                    .font(.appCaption)
+                    .foregroundStyle(Color.appTextMuted)
+                Text("Hold \(next.holdSeconds.formattedTime)")
+                    .font(.appCaption)
+                    .foregroundStyle(Color.holdColour)
+                Text("·")
+                    .foregroundStyle(Color.appTextMuted)
+                Text("Rest \(next.restSeconds.formattedTime)")
+                    .font(.appCaption)
+                    .foregroundStyle(Color.restColour)
+            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm)
+            .background(Color.appCard)
+            .clipShape(Capsule())
+        } else {
+            // Last round or rest phase — keep layout stable
+            Color.clear
+        }
+    }
+
     // MARK: - Session Setup
+
     private func setupSession() {
         let session = TrainingSession(type: sessionType)
         modelContext.insert(session)
@@ -163,9 +201,7 @@ struct ActiveSessionView: View {
 
     private func startTimer() {
         isRunning = true
-        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            tick()
-        }
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in tick() }
     }
 
     private func pauseTimer() {
@@ -181,26 +217,23 @@ struct ActiveSessionView: View {
         } else {
             secondsRemaining -= 1
             if secondsRemaining == 5 {
-                haptics.playWarning()
+                triggerHaptic { hapticService.playWarning() }
             }
         }
     }
 
     private func advancePhase() {
         if rounds.isEmpty {
-            // Breathing exercise — single phase, just count down
             completeSession()
             return
         }
 
         if phase == .rest || phase == .breathe {
-            // Move to hold
             phase = .hold
             secondsRemaining = rounds[currentRound - 1].holdSeconds
-            haptics.playHoldStart()
-            audio.playHoldCue()
+            triggerHaptic { hapticService.playHoldStart() }
+            triggerAudio  { audioService.playHoldCue() }
         } else {
-            // Hold complete — save round
             currentSession?.roundsCompleted = currentRound
             if currentRound >= totalRounds {
                 completeSession()
@@ -208,8 +241,8 @@ struct ActiveSessionView: View {
                 currentRound += 1
                 phase = .rest
                 secondsRemaining = rounds[currentRound - 1].restSeconds
-                haptics.playRestStart()
-                audio.playRestCue()
+                triggerHaptic { hapticService.playRestStart() }
+                triggerAudio  { audioService.playRestCue() }
             }
         }
     }
@@ -220,8 +253,8 @@ struct ActiveSessionView: View {
         currentSession?.durationSeconds = totalSeconds
         UIApplication.shared.isIdleTimerDisabled = false
         sessionComplete = true
-        haptics.playSessionComplete()
-        audio.playCompleteCue()
+        triggerHaptic { hapticService.playSessionComplete() }
+        triggerAudio  { audioService.playCompleteCue() }
     }
 
     private func saveAndDismiss() {
@@ -229,5 +262,13 @@ struct ActiveSessionView: View {
         currentSession?.durationSeconds = totalSeconds
         UIApplication.shared.isIdleTimerDisabled = false
         dismiss()
+    }
+
+    // MARK: - Preference-gated helpers
+    private func triggerHaptic(_ block: () -> Void) {
+        if hapticsEnabled { block() }
+    }
+    private func triggerAudio(_ block: () -> Void) {
+        if audioEnabled { block() }
     }
 }
