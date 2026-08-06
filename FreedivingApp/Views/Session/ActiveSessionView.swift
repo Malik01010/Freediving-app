@@ -132,16 +132,36 @@ struct ActiveSessionView: View {
 
                     Spacer()
 
-                    // Controls — pause/resume
-                    Button {
-                        isRunning ? pauseTimer() : startTimer()
-                    } label: {
-                        Image(systemName: isRunning ? "pause.fill" : "play.fill")
-                            .font(.system(size: 32))
-                            .foregroundStyle(Color.appTeal)
-                            .frame(width: 64, height: 64)
+                    // Controls — pause/resume + skip
+                    HStack(spacing: Spacing.xl) {
+
+                        // Skip button — skips current phase (rest or hold)
+                        Button { skipPhase() } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "forward.fill")
+                                    .font(.system(size: 16))
+                                Text(phase == .rest ? "Skip Rest" : "Skip Hold")
+                                    .font(.appCaption)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundStyle(Color.appTextSecondary)
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.vertical, Spacing.sm)
                             .background(Color.appCard)
-                            .clipShape(Circle())
+                            .clipShape(Capsule())
+                        }
+
+                        // Play/pause
+                        Button {
+                            isRunning ? pauseTimer() : startTimer()
+                        } label: {
+                            Image(systemName: isRunning ? "pause.fill" : "play.fill")
+                                .font(.system(size: 32))
+                                .foregroundStyle(Color.appTeal)
+                                .frame(width: 64, height: 64)
+                                .background(Color.appCard)
+                                .clipShape(Circle())
+                        }
                     }
                     .padding(.bottom, Spacing.xxl)
                 }
@@ -208,6 +228,13 @@ struct ActiveSessionView: View {
         isRunning = false
         timer?.invalidate()
         timer = nil
+    }
+
+    /// Skip the current phase immediately — jumps straight to next phase
+    private func skipPhase() {
+        totalSeconds += secondsRemaining
+        secondsRemaining = 0
+        advancePhase()
     }
 
     private func tick() {

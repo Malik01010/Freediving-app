@@ -123,16 +123,36 @@ struct BreathingExerciseView: View {
 
                     Spacer()
 
-                    // Play/pause
-                    Button {
-                        isRunning ? pause() : resume()
-                    } label: {
-                        Image(systemName: isRunning ? "pause.fill" : "play.fill")
-                            .font(.system(size: 28))
-                            .foregroundStyle(Color.appTeal)
-                            .frame(width: 56, height: 56)
+                    // Controls — pause/resume + skip
+                    HStack(spacing: Spacing.xl) {
+
+                        // Skip phase button
+                        Button { skipPhase() } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "forward.fill")
+                                    .font(.system(size: 16))
+                                Text("Skip")
+                                    .font(.appCaption)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundStyle(Color.appTextSecondary)
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.vertical, Spacing.sm)
                             .background(Color.appCard)
-                            .clipShape(Circle())
+                            .clipShape(Capsule())
+                        }
+
+                        // Play/pause
+                        Button {
+                            isRunning ? pause() : resume()
+                        } label: {
+                            Image(systemName: isRunning ? "pause.fill" : "play.fill")
+                                .font(.system(size: 28))
+                                .foregroundStyle(Color.appTeal)
+                                .frame(width: 56, height: 56)
+                                .background(Color.appCard)
+                                .clipShape(Circle())
+                        }
                     }
                     .padding(.bottom, Spacing.xxl)
                 }
@@ -179,6 +199,22 @@ struct BreathingExerciseView: View {
             secondsInStep = 0
             stepIndex = (stepIndex + 1) % steps.count
         }
+    }
+
+    /// Skip instantly to the start of the next phase step
+    private func skipPhase() {
+        // Advance elapsed by remaining seconds in this step
+        let remaining = currentStep.durationSeconds - secondsInStep
+        totalElapsed += remaining
+
+        if totalElapsed >= totalDurationSeconds {
+            finishSession()
+            return
+        }
+
+        // Move to next step
+        secondsInStep = 0
+        stepIndex = (stepIndex + 1) % steps.count
     }
 
     private func finishSession() {
