@@ -18,19 +18,26 @@ struct HomeView: View {
         StreakService.currentStreak(from: sessions)
     }
 
-    private var recentSessionCount: Int {
-        let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-        return sessions.filter { $0.completed && $0.date >= sevenDaysAgo }.count
-    }
+    // Ordered exactly as requested
+    private let sessionOrder: [SessionType] = [
+        .breathHoldTest,
+        .preBreath,
+        .co2Training,
+        .o2Training,
+        .emptyLungs,
+        .squareTable,
+        .pranayama,
+        .diaphragmatic
+    ]
 
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.appBackground.ignoresSafeArea()
                 ScrollView {
-                    VStack(alignment: .leading, spacing: Spacing.lg) {
+                    VStack(alignment: .leading, spacing: Spacing.md) {
 
-                        // Header
+                        // ── Header ──
                         HStack(alignment: .top) {
                             VStack(alignment: .leading, spacing: Spacing.xs) {
                                 Text("Freediver")
@@ -41,13 +48,12 @@ struct HomeView: View {
                                     .foregroundStyle(Color.appTextSecondary)
                             }
                             Spacer()
-                            // Streak badge
                             if streak > 0 {
                                 VStack(spacing: 2) {
                                     Text("\(streak)")
                                         .font(.system(size: 22, weight: .bold, design: .rounded))
                                         .foregroundStyle(Color.appTeal)
-                                    Text(streak == 1 ? "day streak" : "day streak")
+                                    Text("day streak")
                                         .font(.appCaption)
                                         .foregroundStyle(Color.appTextMuted)
                                 }
@@ -60,38 +66,17 @@ struct HomeView: View {
                         .padding(.horizontal, Spacing.md)
                         .padding(.top, Spacing.md)
 
-                        // Weekly dots — 7-day training activity
+                        // ── Weekly dots ──
                         WeeklyActivityRow(sessions: sessions)
                             .padding(.horizontal, Spacing.md)
 
-                        // Preparation
-                        SectionHeader(title: "PREPARATION")
-                        LazyVGrid(
-                            columns: [GridItem(.flexible()), GridItem(.flexible())],
-                            spacing: Spacing.sm
-                        ) {
-                            ForEach(
-                                [SessionType.breathHoldTest, .preBreath, .squareTable, .pranayama, .diaphragmatic],
-                                id: \.self
-                            ) { type in
-                                SessionCard(type: type, personalBest: profile.personalBestSeconds) {
-                                    selectedSession = type
-                                }
-                            }
-                        }
-                        .padding(.horizontal, Spacing.md)
-
-                        // Training Tables
-                        SectionHeader(title: "TRAINING TABLES")
-                        LazyVGrid(
-                            columns: [GridItem(.flexible()), GridItem(.flexible())],
-                            spacing: Spacing.sm
-                        ) {
-                            ForEach(
-                                [SessionType.co2Training, .o2Training, .emptyLungs],
-                                id: \.self
-                            ) { type in
-                                SessionCard(type: type, personalBest: profile.personalBestSeconds) {
+                        // ── Full-width stacked session tiles ──
+                        VStack(spacing: Spacing.sm) {
+                            ForEach(sessionOrder, id: \.self) { type in
+                                SessionCard(
+                                    type: type,
+                                    personalBest: profile.personalBestSeconds
+                                ) {
                                     selectedSession = type
                                 }
                             }
@@ -109,7 +94,6 @@ struct HomeView: View {
 }
 
 // MARK: - Weekly Activity Row
-// Seven dots — one per day. Filled teal = trained, muted = rest day.
 struct WeeklyActivityRow: View {
     let sessions: [TrainingSession]
 
