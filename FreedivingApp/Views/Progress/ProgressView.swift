@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 import Charts
 
-struct ProgressView: View {
+struct TrainingProgressView: View {
     @Query(sort: \PersonalBest.date) private var personalBests: [PersonalBest]
     @Query(sort: \TrainingSession.date, order: .reverse) private var sessions: [TrainingSession]
 

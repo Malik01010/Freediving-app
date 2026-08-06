@@ -7,7 +7,7 @@ struct ContentView: View {
                 .tabItem {
                     Label("Train", systemImage: "lungs.fill")
                 }
-            ProgressView()
+            TrainingProgressView()
                 .tabItem {
                     Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
                 }
