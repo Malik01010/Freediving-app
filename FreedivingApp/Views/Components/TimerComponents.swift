@@ -39,14 +39,14 @@ struct PhasePill: View {
     }
 }
 
-// Round badge
+// Round badge — 20% larger
 struct RoundBadge: View {
     let current: Int
     let total: Int
 
     var body: some View {
         Text("Round \(current) of \(total)")
-            .font(.appSubheadline)
+            .font(.system(size: 20, weight: .semibold, design: .rounded))
             .foregroundStyle(Color.appTextSecondary)
     }
 }

@@ -132,37 +132,37 @@ struct ActiveSessionView: View {
 
                     Spacer()
 
-                    // Controls — pause/resume + skip
-                    HStack(spacing: Spacing.xl) {
+                    // Controls — skip above pause, both centred
+                    VStack(spacing: Spacing.lg) {
 
-                        // Skip button — skips current phase (rest or hold)
-                        Button { skipPhase() } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "forward.fill")
-                                    .font(.system(size: 16))
-                                Text(phase == .rest ? "Skip Rest" : "Skip Hold")
-                                    .font(.appCaption)
-                                    .fontWeight(.semibold)
-                            }
-                            .foregroundStyle(Color.appTextSecondary)
-                            .padding(.horizontal, Spacing.md)
-                            .padding(.vertical, Spacing.sm)
-                            .background(Color.appCard)
-                            .clipShape(Capsule())
-                        }
-
-                        // Play/pause
+                        // Pause / resume — 20% larger (77px → 77px)
                         Button {
                             isRunning ? pauseTimer() : startTimer()
                         } label: {
                             Image(systemName: isRunning ? "pause.fill" : "play.fill")
-                                .font(.system(size: 32))
+                                .font(.system(size: 38))
                                 .foregroundStyle(Color.appTeal)
-                                .frame(width: 64, height: 64)
+                                .frame(width: 77, height: 77)
                                 .background(Color.appCard)
                                 .clipShape(Circle())
                         }
+
+                        // Skip button — 20% larger, centred below pause
+                        Button { skipPhase() } label: {
+                            HStack(spacing: 7) {
+                                Image(systemName: "forward.fill")
+                                    .font(.system(size: 18))
+                                Text(phase == .rest ? "Skip Rest" : "Skip Hold")
+                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            }
+                            .foregroundStyle(Color.appTextSecondary)
+                            .padding(.horizontal, Spacing.lg)
+                            .padding(.vertical, Spacing.sm)
+                            .background(Color.appCard)
+                            .clipShape(Capsule())
+                        }
                     }
+                    .frame(maxWidth: .infinity)
                     .padding(.bottom, Spacing.xxl)
                 }
             }
