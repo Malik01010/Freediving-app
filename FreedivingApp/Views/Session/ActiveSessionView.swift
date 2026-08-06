@@ -125,42 +125,39 @@ struct ActiveSessionView: View {
                         }
                     }
 
-                    // Next round preview — shown during rest phase
+                    // Skip button — directly under timer, centred
+                    Button { skipPhase() } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "forward.fill")
+                                .font(.system(size: 22))
+                            Text(phase == .rest ? "Skip Rest" : "Skip Hold")
+                                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        }
+                        .foregroundStyle(Color.appTextSecondary)
+                        .padding(.horizontal, Spacing.xl)
+                        .padding(.vertical, Spacing.sm + 2)
+                        .background(Color.appCard)
+                        .clipShape(Capsule())
+                    }
+                    .padding(.top, Spacing.md)
+
+                    // Next round preview
                     nextRoundPreview
                         .frame(height: 52)
-                        .padding(.top, Spacing.md)
+                        .padding(.top, Spacing.sm)
 
                     Spacer()
 
-                    // Controls — skip above pause, both centred
-                    VStack(spacing: Spacing.lg) {
-
-                        // Pause / resume — 20% larger (77px → 77px)
-                        Button {
-                            isRunning ? pauseTimer() : startTimer()
-                        } label: {
-                            Image(systemName: isRunning ? "pause.fill" : "play.fill")
-                                .font(.system(size: 38))
-                                .foregroundStyle(Color.appTeal)
-                                .frame(width: 77, height: 77)
-                                .background(Color.appCard)
-                                .clipShape(Circle())
-                        }
-
-                        // Skip button — 20% larger, centred below pause
-                        Button { skipPhase() } label: {
-                            HStack(spacing: 7) {
-                                Image(systemName: "forward.fill")
-                                    .font(.system(size: 18))
-                                Text(phase == .rest ? "Skip Rest" : "Skip Hold")
-                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            }
-                            .foregroundStyle(Color.appTextSecondary)
-                            .padding(.horizontal, Spacing.lg)
-                            .padding(.vertical, Spacing.sm)
+                    // Pause / resume — 40% larger than original (77 * 1.2 = 92px)
+                    Button {
+                        isRunning ? pauseTimer() : startTimer()
+                    } label: {
+                        Image(systemName: isRunning ? "pause.fill" : "play.fill")
+                            .font(.system(size: 46))
+                            .foregroundStyle(Color.appTeal)
+                            .frame(width: 92, height: 92)
                             .background(Color.appCard)
-                            .clipShape(Capsule())
-                        }
+                            .clipShape(Circle())
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.bottom, Spacing.xxl)
