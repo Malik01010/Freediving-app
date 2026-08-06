@@ -1,26 +1,9 @@
 import SwiftUI
 
+// ContentView just forwards to RootView.
+// Kept so any Xcode-generated references don't break.
 struct ContentView: View {
     var body: some View {
-        TabView {
-            HomeView()
-                .tabItem {
-                    Label("Train", systemImage: "lungs.fill")
-                }
-            TrainingProgressView()
-                .tabItem {
-                    Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
-                }
-            HistoryView()
-                .tabItem {
-                    Label("History", systemImage: "calendar")
-                }
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape")
-                }
-        }
-        .tint(.appTeal)
-        .preferredColorScheme(.dark)
+        RootView()
     }
 }
