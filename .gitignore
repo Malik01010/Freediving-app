@@ -1,10 +1,31 @@
-# Xcode
-*.xcodeproj/xcuserdata/
-*.xcworkspace/xcuserdata/
+# ──────────────────────────────────────────
+# Xcode – never track build or user state
+# ──────────────────────────────────────────
 build/
 DerivedData/
 *.ipa
+*.dSYM
 *.dSYM.zip
 
+# User-specific Xcode data (these differ per machine and cause conflicts)
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcworkspace/xcuserdata/
+**/*.xcuserstate
+xcuserdata/
+
+# Xcode scheme management (auto-generated)
+xcschememanagement.plist
+
+# Swift Package Manager
+.build/
+*.resolved
+
+# ──────────────────────────────────────────
 # macOS
+# ──────────────────────────────────────────
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
