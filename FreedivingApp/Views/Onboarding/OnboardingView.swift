@@ -30,7 +30,7 @@ struct OnboardingView: View {
                     WelcomePage().tag(0)
                     HowItWorksPage().tag(1)
                     TablesPage().tag(2)
-                    GetStartedPage(onComplete: onComplete).tag(3)
+                    GetStartedPage().tag(3)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.easeInOut, value: currentPage)
@@ -48,24 +48,23 @@ struct OnboardingView: View {
                         }
                     }
 
-                    // Next / Get Started button
-                    if currentPage < totalPages - 1 {
-                        Button {
+                    // Next / Let's Go! button — always in the same place
+                    Button {
+                        if currentPage < totalPages - 1 {
                             withAnimation { currentPage += 1 }
-                        } label: {
-                            Text("Next")
-                                .font(.system(size: 18, weight: .semibold, design: .rounded))
-                                .foregroundStyle(Color.appBackground)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 54)
-                                .background(Color.appTeal)
-                                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+                        } else {
+                            onComplete()
                         }
-                        .padding(.horizontal, Spacing.xl)
-                    } else {
-                        // Last page handled by GetStartedPage itself
-                        Color.clear.frame(height: 54)
+                    } label: {
+                        Text(currentPage < totalPages - 1 ? "Next" : "Let's Go!")
+                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            .foregroundStyle(Color.appBackground)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 54)
+                            .background(Color.appTeal)
+                            .clipShape(RoundedRectangle(cornerRadius: Radius.md))
                     }
+                    .padding(.horizontal, Spacing.xl)
                 }
                 .padding(.bottom, Spacing.xl)
             }
@@ -244,8 +243,6 @@ private struct TablesPage: View {
 
 // MARK: - Page 4: Get Started
 private struct GetStartedPage: View {
-    let onComplete: () -> Void
-
     var body: some View {
         VStack(spacing: Spacing.xl) {
             Spacer()
@@ -271,17 +268,6 @@ private struct GetStartedPage: View {
                     .lineSpacing(5)
                     .padding(.horizontal, Spacing.xl)
             }
-
-            Button(action: onComplete) {
-                Text("Let's Go 🤿")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color.appBackground)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 58)
-                    .background(Color.appTeal)
-                    .clipShape(RoundedRectangle(cornerRadius: Radius.md))
-            }
-            .padding(.horizontal, Spacing.xl)
 
             Spacer()
             Spacer()
