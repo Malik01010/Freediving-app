@@ -8,8 +8,9 @@ struct SessionCard: View {
     var body: some View {
         Button(action: onTap) {
             switch type {
-            case .breathHoldTest: photoCard(imageName: "breath-hold-hero",  title: "Breath Hold Test", subtitle: "Tap to test")
-            case .preBreath:      photoCard(imageName: "prebreath-hero",     title: "Pre Breath",       subtitle: "2 min · Controlled breathing")
+            case .breathHoldTest: photoCard(imageName: "breath-hold-hero", title: "Breath Hold Test", subtitle: "Tap to test")
+            case .preBreath:      photoCard(imageName: "prebreath-hero",    title: "Pre Breath",       subtitle: "2 min · Controlled breathing")
+            case .co2Training:    photoCard(imageName: "co2-hero",          title: "CO₂ Training",     subtitle: "8 rounds · 10 min")
             default:              standardCard
             }
         }
