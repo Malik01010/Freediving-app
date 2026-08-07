@@ -5,6 +5,7 @@ struct SessionDetailView: View {
     let personalBest: Int
     @State private var showingSession = false
     @State private var showingBreathHoldTest = false
+    @Environment(\.dismiss) private var dismiss
 
     private var rounds: [TrainingRound] {
         switch sessionType {
@@ -108,7 +109,11 @@ struct SessionDetailView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .fullScreenCover(isPresented: $showingBreathHoldTest) {
-            BreathHoldTestView()
+            BreathHoldTestView {
+                // Dismiss the fullScreenCover first, then pop SessionDetailView
+                showingBreathHoldTest = false
+                dismiss()
+            }
         }
         .fullScreenCover(isPresented: $showingSession) {
             if let breathConfig = BreathingSessionFactory.steps(for: sessionType) {

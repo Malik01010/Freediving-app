@@ -6,6 +6,9 @@ import SwiftData
 // On release, time is recorded and optionally saved as PB.
 
 struct BreathHoldTestView: View {
+    /// Called when the user taps "Done" — dismisses all the way back to Home
+    var onComplete: (() -> Void)? = nil
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var profiles: [UserProfile]
@@ -235,7 +238,13 @@ struct BreathHoldTestView: View {
                     ActionButton(title: "Try Again", style: .secondary)
                 }
 
-                Button { dismiss() } label: {
+                Button {
+                    if let onComplete {
+                        onComplete()
+                    } else {
+                        dismiss()
+                    }
+                } label: {
                     Text("Done")
                         .font(.appBody)
                         .foregroundStyle(Color.appTextMuted)
