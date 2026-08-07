@@ -7,20 +7,20 @@ struct SessionCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            if type == .breathHoldTest {
-                heroCard
-            } else {
-                standardCard
+            switch type {
+            case .breathHoldTest: photoCard(imageName: "breath-hold-hero",  title: "Breath Hold Test", subtitle: "Tap to test")
+            case .preBreath:      photoCard(imageName: "prebreath-hero",     title: "Pre Breath",       subtitle: "2 min · Controlled breathing")
+            default:              standardCard
             }
         }
         .buttonStyle(.plain)
     }
 
-    // MARK: - Hero card (Breath Hold Test — full background image)
-    private var heroCard: some View {
+    // MARK: - Photo hero card (reusable for any tile with a background image)
+    private func photoCard(imageName: String, title: String, subtitle: String) -> some View {
         ZStack(alignment: .bottomLeading) {
             // Background photo
-            Image("breath-hold-hero")
+            Image(imageName)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(maxWidth: .infinity, minHeight: 168)
@@ -39,10 +39,10 @@ struct SessionCard: View {
 
             // Text over image
             VStack(alignment: .leading, spacing: 6) {
-                Text("Breath Hold Test")
+                Text(title)
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .foregroundStyle(Color.white)
-                Text("Tap to test")
+                Text(subtitle)
                     .font(.system(size: 15, weight: .regular, design: .rounded))
                     .foregroundStyle(Color.white.opacity(0.75))
             }
