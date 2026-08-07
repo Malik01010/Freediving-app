@@ -18,28 +18,34 @@ struct SessionCard: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Photo hero card (reusable for any tile with a background image)
+    // MARK: - Photo hero card
+    // Hard-locked to exactly 168pt tall on every tile — no GeometryReader so
+    // the ZStack itself drives the height and all cards are identical.
     private func photoCard(imageName: String, title: String, subtitle: String) -> some View {
         ZStack(alignment: .bottomLeading) {
-            // Background photo
+
+            // Image fills the full width and is clamped to 168pt height.
+            // .infinity width + fixed height + scaledToFill + clipped = uniform crop.
             Image(imageName)
                 .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(maxWidth: .infinity, minHeight: 168)
+                .scaledToFill()
+                .frame(maxWidth: .infinity)
+                .frame(height: 168)
                 .clipped()
 
-            // Dark gradient overlay so text is readable
+            // Dark gradient — readable text over any photo
             LinearGradient(
                 colors: [
                     Color.black.opacity(0.0),
-                    Color.black.opacity(0.55),
-                    Color.black.opacity(0.82)
+                    Color.black.opacity(0.5),
+                    Color.black.opacity(0.78)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
+            .frame(height: 168)
 
-            // Text over image
+            // Title + subtitle bottom-left
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
@@ -62,8 +68,9 @@ struct SessionCard: View {
                 }
                 Spacer()
             }
+            .frame(height: 168)
         }
-        .frame(maxWidth: .infinity, minHeight: 168)
+        .frame(maxWidth: .infinity, minHeight: 168, maxHeight: 168)
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
         .overlay(
             RoundedRectangle(cornerRadius: Radius.md)
@@ -120,8 +127,7 @@ struct SessionCard: View {
                 .foregroundStyle(Color.appTextMuted)
         }
         .padding(.horizontal, Spacing.lg)
-        .padding(.vertical, Spacing.lg)
-        .frame(maxWidth: .infinity, minHeight: 168)
+        .frame(maxWidth: .infinity, minHeight: 168, maxHeight: 168)
         .background(Color.appCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
         .overlay(
