@@ -89,17 +89,3 @@ extension Bundle {
     }
 }
 
-// MARK: - Int time formatting
-extension Int {
-    var formattedTime: String {
-        let m = self / 60
-        let s = self % 60
-        return String(format: "%d:%02d", m, s)
-    }
-    var shortFormattedTime: String {
-        let m = self / 60
-        let s = self % 60
-        if m > 0 { return "\(m)m \(s)s" }
-        return "\(s)s"
-    }
-}
