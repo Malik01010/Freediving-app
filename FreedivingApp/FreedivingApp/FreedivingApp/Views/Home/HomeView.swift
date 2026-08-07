@@ -36,31 +36,45 @@ struct HomeView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Spacing.md) {
 
-                        // ── Header ──
-                        HStack(alignment: .top) {
-                            VStack(alignment: .leading, spacing: Spacing.xs) {
-                                Text("Freediver")
-                                    .font(.appTitle)
-                                    .foregroundStyle(Color.appTextPrimary)
-                                Text("PB: \(profile.personalBestSeconds.formattedTime)")
-                                    .font(.appCaption)
-                                    .foregroundStyle(Color.appTextSecondary)
+                        // ── Header: PB + Streak side by side ──
+                        HStack(spacing: Spacing.md) {
+
+                            // Personal Best card
+                            VStack(spacing: 4) {
+                                Text(profile.personalBestSeconds > 0
+                                     ? profile.personalBestSeconds.formattedTime
+                                     : "--:--")
+                                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                                    .foregroundStyle(Color.appTeal)
+                                    .monospacedDigit()
+                                Text("Personal Best")
+                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .foregroundStyle(Color.appTextMuted)
                             }
-                            Spacer()
-                            if streak > 0 {
-                                VStack(spacing: 2) {
-                                    Text("\(streak)")
-                                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                                        .foregroundStyle(Color.appTeal)
-                                    Text("day streak")
-                                        .font(.appCaption)
-                                        .foregroundStyle(Color.appTextMuted)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Spacing.md)
+                            .background(Color.appCard)
+                            .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+
+                            // Daily streak card
+                            VStack(spacing: 4) {
+                                HStack(spacing: 4) {
+                                    Text(streak > 0 ? "\(streak)" : "0")
+                                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                                        .foregroundStyle(streak > 0 ? Color.appTeal : Color.appTextMuted)
+                                    if streak > 0 {
+                                        Text("🔥")
+                                            .font(.system(size: 22))
+                                    }
                                 }
-                                .padding(.horizontal, Spacing.md)
-                                .padding(.vertical, Spacing.sm)
-                                .background(Color.appCard)
-                                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+                                Text("Day Streak")
+                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .foregroundStyle(Color.appTextMuted)
                             }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Spacing.md)
+                            .background(Color.appCard)
+                            .clipShape(RoundedRectangle(cornerRadius: Radius.md))
                         }
                         .padding(.horizontal, Spacing.md)
                         .padding(.top, Spacing.md)
