@@ -8,16 +8,19 @@ final class UserProfile {
     var hapticsEnabled: Bool
     var audioCuesEnabled: Bool
     var createdAt: Date
+    var hasCompletedOnboarding: Bool
 
     init(
-        personalBestSeconds: Int = 90,
+        personalBestSeconds: Int = 0,
         hapticsEnabled: Bool = true,
-        audioCuesEnabled: Bool = true
+        audioCuesEnabled: Bool = true,
+        hasCompletedOnboarding: Bool = false
     ) {
         self.id = UUID()
         self.personalBestSeconds = personalBestSeconds
         self.hapticsEnabled = hapticsEnabled
         self.audioCuesEnabled = audioCuesEnabled
         self.createdAt = Date()
+        self.hasCompletedOnboarding = hasCompletedOnboarding
     }
 }
