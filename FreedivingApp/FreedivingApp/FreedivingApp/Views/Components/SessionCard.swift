@@ -16,26 +16,51 @@ struct SessionCard: View {
     @State private var showInfo = false
 
     var body: some View {
-        Button(action: onTap) {
-            switch type {
-            case .breathHoldTest:  photoCard(imageName: "breath-hold-hero",    title: "Breath Hold Test",  subtitle: "Tap to test")
-            case .preBreath:       photoCard(imageName: "prebreath-hero",       title: "Pre Breath",        subtitle: "2 min · Controlled breathing")
-            case .co2Training:     photoCard(imageName: "co2-hero",             title: "CO₂ Training",      subtitle: "8 rounds · 10 min")
-            case .o2Training:      photoCard(imageName: "o2-hero",              title: "O₂ Training",       subtitle: "8 rounds · 21 min")
-            case .emptyLungs:      photoCard(imageName: "empty-lungs-hero",     title: "Empty Lungs",       subtitle: "8 rounds · 18 min")
-            case .squareTable:     photoCard(imageName: "square-table-hero",    title: "Square Table",      subtitle: "5 min")
-            case .pranayama:       photoCard(imageName: "pranayama-hero",       title: "Pranayama",         subtitle: "Alternate nostril breathing")
-            case .diaphragmatic:   photoCard(imageName: "diaphragmatic-hero",   title: "Diaphragmatic",     subtitle: "Deep belly breathing")
+        // The card image/content is the tappable area.
+        // The ⓘ button floats on top in a ZStack — completely separate from the main tap.
+        ZStack(alignment: .topTrailing) {
+
+            // ── Main tappable card ──
+            Button(action: onTap) {
+                switch type {
+                case .breathHoldTest:  photoCard(imageName: "breath-hold-hero",  title: "Breath Hold Test", subtitle: "Tap to test")
+                case .preBreath:       photoCard(imageName: "prebreath-hero",     title: "Pre Breath",       subtitle: "2 min · Controlled breathing")
+                case .co2Training:     photoCard(imageName: "co2-hero",           title: "CO₂ Training",     subtitle: "8 rounds · 10 min")
+                case .o2Training:      photoCard(imageName: "o2-hero",            title: "O₂ Training",      subtitle: "8 rounds · 21 min")
+                case .emptyLungs:      photoCard(imageName: "empty-lungs-hero",   title: "Empty Lungs",      subtitle: "8 rounds · 18 min")
+                case .squareTable:     photoCard(imageName: "square-table-hero",  title: "Square Table",     subtitle: "5 min")
+                case .pranayama:       photoCard(imageName: "pranayama-hero",     title: "Pranayama",        subtitle: "Alternate nostril breathing")
+                case .diaphragmatic:   photoCard(imageName: "diaphragmatic-hero", title: "Diaphragmatic",    subtitle: "Deep belly breathing")
+                }
+            }
+            .buttonStyle(.plain)
+
+            // ── ⓘ button — floats top-right, completely outside the main Button ──
+            if sessionInfo[type] != nil {
+                Button {
+                    showInfo = true
+                } label: {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(Color.white.opacity(0.9))
+                        .frame(width: 36, height: 36)
+                        .background(Color.black.opacity(0.35))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .padding(Spacing.md)
             }
         }
-        .buttonStyle(.plain)
+        .sheet(isPresented: $showInfo) {
+            if let infoText = sessionInfo[type] {
+                InfoSheet(title: type.rawValue, description: infoText)
+            }
+        }
     }
 
     // MARK: - Photo hero card
     private func photoCard(imageName: String, title: String, subtitle: String) -> some View {
-        let infoText = sessionInfo[type]
-
-        return ZStack(alignment: .bottomLeading) {
+        ZStack(alignment: .bottomLeading) {
 
             // Background image — fixed 168pt, fills width, crops centre
             Image(imageName)
@@ -69,38 +94,14 @@ struct SessionCard: View {
             .padding(.horizontal, Spacing.lg)
             .padding(.bottom, Spacing.lg)
 
-            // Top-right controls: ⓘ button (if info exists) + chevron
-            VStack {
-                HStack {
-                    Spacer()
-                    HStack(spacing: Spacing.sm) {
-                        // ── Info button ──
-                        if infoText != nil {
-                            Button {
-                                showInfo = true
-                            } label: {
-                                Image(systemName: "info.circle")
-                                    .font(.system(size: 20, weight: .medium))
-                                    .foregroundStyle(Color.white.opacity(0.85))
-                                    .frame(width: 36, height: 36)
-                                    .background(Color.black.opacity(0.30))
-                                    .clipShape(Circle())
-                            }
-                            // Stop the ⓘ tap propagating to the card's main Button
-                            .buttonStyle(.plain)
-                            .highPriorityGesture(TapGesture().onEnded { showInfo = true })
-                        }
-
-                        // ── Chevron ──
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(Color.white.opacity(0.7))
-                    }
-                    .padding(Spacing.lg)
-                }
+            // Chevron — bottom right
+            HStack {
                 Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.7))
+                    .padding(Spacing.lg)
             }
-            .frame(height: 168)
         }
         .frame(maxWidth: .infinity, minHeight: 168, maxHeight: 168)
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
@@ -108,12 +109,6 @@ struct SessionCard: View {
             RoundedRectangle(cornerRadius: Radius.md)
                 .stroke(Color.white.opacity(0.08), lineWidth: 1)
         )
-        // ── Info sheet ──
-        .sheet(isPresented: $showInfo) {
-            if let infoText {
-                InfoSheet(title: title, description: infoText)
-            }
-        }
     }
 
     // MARK: - Standard card (no photo sessions)
