@@ -58,7 +58,8 @@ struct BreathingExerciseView: View {
                 ) { dismiss() }
             } else {
                 VStack(spacing: 0) {
-                    // Top bar
+
+                    // ── Top bar — identical structure to ActiveSessionView ──
                     HStack {
                         Button { endSession() } label: {
                             Image(systemName: "xmark.circle.fill")
@@ -75,12 +76,12 @@ struct BreathingExerciseView: View {
                                 .foregroundStyle(Color.appTextMuted)
                         }
                         Spacer()
-                        Color.clear.frame(width: 24)
+                        Color.clear.frame(width: 24, height: 24)
                     }
                     .padding(.horizontal, Spacing.md)
                     .padding(.top, Spacing.md)
 
-                    // Overall progress bar
+                    // ── Progress bar ──
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
                             Capsule().fill(Color.appCard).frame(height: 3)
@@ -96,66 +97,62 @@ struct BreathingExerciseView: View {
 
                     Spacer()
 
-                    // Breath circle
+                    // ── Breath circle ──
                     ZStack {
                         BreathGuideCircle(
                             phase: currentStep.phase,
                             progress: stepProgress
                         )
-                        .frame(width: 220, height: 220)
+                        .frame(width: 260, height: 260)
 
                         VStack(spacing: Spacing.sm) {
                             PhasePill(label: currentStep.label, color: currentStep.phase.color)
                             Text("\(currentStep.durationSeconds - secondsInStep)")
-                                .font(.timerMedium)
+                                .font(.timerLarge)
                                 .foregroundStyle(Color.appTextPrimary)
                                 .monospacedDigit()
                         }
                     }
 
-                    Spacer()
+                    // ── Skip button — directly under circle ──
+                    Button { skipPhase() } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "forward.fill")
+                                .font(.system(size: 22))
+                            Text("Skip")
+                                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        }
+                        .foregroundStyle(Color.appTextSecondary)
+                        .padding(.horizontal, Spacing.xl)
+                        .padding(.vertical, Spacing.sm + 2)
+                        .background(Color.appCard)
+                        .clipShape(Capsule())
+                    }
+                    .padding(.top, Spacing.md)
 
-                    // Instruction text
+                    // ── Instruction text — fixed height so layout doesn't shift ──
                     Text(currentStep.phase.instruction)
                         .font(.appBody)
                         .foregroundStyle(Color.appTextSecondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, Spacing.xl)
-                        .frame(minHeight: 44)
+                        .frame(height: 44)
+                        .padding(.top, Spacing.sm)
 
                     Spacer()
 
-                    // Controls — pause/resume + skip
-                    HStack(spacing: Spacing.xl) {
-
-                        // Skip phase button
-                        Button { skipPhase() } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "forward.fill")
-                                    .font(.system(size: 16))
-                                Text("Skip")
-                                    .font(.appCaption)
-                                    .fontWeight(.semibold)
-                            }
-                            .foregroundStyle(Color.appTextSecondary)
-                            .padding(.horizontal, Spacing.md)
-                            .padding(.vertical, Spacing.sm)
+                    // ── Pause/resume — same size as ActiveSessionView (92pt) ──
+                    Button {
+                        isRunning ? pause() : resume()
+                    } label: {
+                        Image(systemName: isRunning ? "pause.fill" : "play.fill")
+                            .font(.system(size: 46))
+                            .foregroundStyle(Color.appTeal)
+                            .frame(width: 92, height: 92)
                             .background(Color.appCard)
-                            .clipShape(Capsule())
-                        }
-
-                        // Play/pause
-                        Button {
-                            isRunning ? pause() : resume()
-                        } label: {
-                            Image(systemName: isRunning ? "pause.fill" : "play.fill")
-                                .font(.system(size: 28))
-                                .foregroundStyle(Color.appTeal)
-                                .frame(width: 56, height: 56)
-                                .background(Color.appCard)
-                                .clipShape(Circle())
-                        }
+                            .clipShape(Circle())
                     }
+                    .frame(maxWidth: .infinity)
                     .padding(.bottom, Spacing.xxl)
                 }
             }
