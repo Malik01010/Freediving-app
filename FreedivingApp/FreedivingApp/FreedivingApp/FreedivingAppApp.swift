@@ -27,32 +27,48 @@ struct FreedivingAppApp: App {
 struct RootView: View {
     @Query private var profiles: [UserProfile]
     @Environment(\.modelContext) private var modelContext
-
-    private var profile: UserProfile {
-        if let existing = profiles.first { return existing }
-        let newProfile = UserProfile()
-        modelContext.insert(newProfile)
-        return newProfile
-    }
+    // Drives the switch — @State guarantees an immediate redraw when set
+    @State private var onboardingDone = false
 
     var body: some View {
-        if !profile.hasCompletedOnboarding {
-            OnboardingView {
-                profile.hasCompletedOnboarding = true
+        Group {
+            if onboardingDone {
+                mainTabView
+            } else {
+                OnboardingView {
+                    // 1. Persist to SwiftData
+                    if let p = profiles.first {
+                        p.hasCompletedOnboarding = true
+                    } else {
+                        let p = UserProfile()
+                        p.hasCompletedOnboarding = true
+                        modelContext.insert(p)
+                    }
+                    // 2. Flip state → triggers immediate redraw to mainTabView
+                    onboardingDone = true
+                }
             }
-        } else {
-            TabView {
-                HomeView()
-                    .tabItem { Label("Train",    systemImage: "lungs.fill") }
-                TrainingProgressView()
-                    .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
-                HistoryView()
-                    .tabItem { Label("History",  systemImage: "calendar") }
-                SettingsView()
-                    .tabItem { Label("Settings", systemImage: "gearshape") }
-            }
-            .tint(.appTeal)
-            .preferredColorScheme(.dark)
         }
+        // On every launch after the first, skip onboarding immediately
+        .onAppear {
+            if profiles.first?.hasCompletedOnboarding == true {
+                onboardingDone = true
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private var mainTabView: some View {
+        TabView {
+            HomeView()
+                .tabItem { Label("Train",    systemImage: "lungs.fill") }
+            TrainingProgressView()
+                .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
+            HistoryView()
+                .tabItem { Label("History",  systemImage: "calendar") }
+            SettingsView()
+                .tabItem { Label("Settings", systemImage: "gearshape") }
+        }
+        .tint(.appTeal)
     }
 }
