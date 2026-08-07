@@ -55,7 +55,9 @@ final class AudioCueService {
             try AVAudioSession.sharedInstance().setActive(true)
             audioEngine.attach(playerNode)
             let mixer = audioEngine.mainMixerNode
-            audioEngine.connect(playerNode, to: mixer, format: nil)
+            // Match the mixer's output format exactly (stereo, native sample rate)
+            let outputFormat = mixer.outputFormat(forBus: 0)
+            audioEngine.connect(playerNode, to: mixer, format: outputFormat)
             try audioEngine.start()
             isEngineReady = true
         } catch {
@@ -72,36 +74,39 @@ final class AudioCueService {
         fadeOut: Bool = false
     ) {
         guard isEngineReady else {
-            // Graceful fallback
             playSystemSound(1057)
             return
         }
 
-        let sampleRate: Double = 44100
+        // Use the player node's output format so channel count always matches
+        let format = playerNode.outputFormat(forBus: 0)
+        let sampleRate = format.sampleRate
+        let channelCount = Int(format.channelCount)
         let frameCount = AVAudioFrameCount(sampleRate * duration)
-        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1),
-              let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else { return }
 
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else { return }
         buffer.frameLength = frameCount
-        let data = buffer.floatChannelData![0]
 
-        for i in 0..<Int(frameCount) {
-            let t = Double(i) / sampleRate
-            var sample = Float(sin(2.0 * Double.pi * frequency * t)) * amplitude
+        for ch in 0..<channelCount {
+            let data = buffer.floatChannelData![ch]
+            for i in 0..<Int(frameCount) {
+                let t = Double(i) / sampleRate
+                var sample = Float(sin(2.0 * Double.pi * frequency * t)) * amplitude
 
-            // Envelope shaping
-            let progress = Float(i) / Float(frameCount)
-            if fadeIn {
-                sample *= min(progress * 4, 1.0)           // quick fade in over first 25%
+                // Envelope shaping
+                let progress = Float(i) / Float(frameCount)
+                if fadeIn {
+                    sample *= min(progress * 4, 1.0)
+                }
+                if fadeOut {
+                    sample *= max(1.0 - (progress - 0.6) * 2.5, 0.0)
+                }
+                // End-fade to prevent clicks
+                let endFade = max(1.0 - (progress - 0.85) * 6.0, 0.0)
+                sample *= endFade
+
+                data[i] = sample
             }
-            if fadeOut {
-                sample *= max(1.0 - (progress - 0.6) * 2.5, 0.0) // fade out over last 40%
-            }
-            // Always apply a tiny end-fade to avoid clicks
-            let endFade = max(1.0 - (progress - 0.85) * 6.0, 0.0)
-            sample *= endFade
-
-            data[i] = sample
         }
 
         playerNode.stop()
