@@ -5,7 +5,6 @@ struct HomeView: View {
     @Query private var profiles: [UserProfile]
     @Query(sort: \TrainingSession.date, order: .reverse) private var sessions: [TrainingSession]
     @Environment(\.modelContext) private var modelContext
-    @State private var selectedSession: SessionType?
 
     private var profile: UserProfile {
         if let existing = profiles.first { return existing }
@@ -76,18 +75,13 @@ struct HomeView: View {
                                 SessionCard(
                                     type: type,
                                     personalBest: profile.personalBestSeconds
-                                ) {
-                                    selectedSession = type
-                                }
+                                )
                             }
                         }
                         .padding(.horizontal, Spacing.md)
                         .padding(.bottom, Spacing.xl)
                     }
                 }
-            }
-            .navigationDestination(item: $selectedSession) { type in
-                SessionDetailView(sessionType: type, personalBest: profile.personalBestSeconds)
             }
         }
     }

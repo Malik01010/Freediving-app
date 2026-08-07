@@ -11,17 +11,16 @@ private let sessionInfo: [SessionType: String] = [
 struct SessionCard: View {
     let type: SessionType
     let personalBest: Int
-    let onTap: () -> Void
 
     @State private var showInfo = false
 
     var body: some View {
-        // Outer ZStack is locked to exactly 168pt — nothing bleeds into adjacent tiles.
-        // ⓘ button is a sibling of the main Button, not nested inside it.
         ZStack(alignment: .topTrailing) {
 
-            // ── Main tappable card ──
-            Button(action: onTap) {
+            // ── Full-tile NavigationLink ──
+            NavigationLink {
+                SessionDetailView(sessionType: type, personalBest: personalBest)
+            } label: {
                 switch type {
                 case .breathHoldTest:  photoCard(imageName: "breath-hold-hero",  title: "Breath Hold Test", subtitle: "Tap to test")
                 case .preBreath:       photoCard(imageName: "prebreath-hero",     title: "Pre Breath",       subtitle: "2 min · Controlled breathing")
@@ -35,7 +34,7 @@ struct SessionCard: View {
             }
             .buttonStyle(.plain)
 
-            // ── ⓘ button — sits inside the 168pt ZStack, top-right corner ──
+            // ── ⓘ button — sibling of NavigationLink, sits top-right ──
             if sessionInfo[type] != nil {
                 Button {
                     showInfo = true
@@ -51,7 +50,6 @@ struct SessionCard: View {
                 .padding(Spacing.md)
             }
         }
-        // Hard lock the whole tile to 168pt — ⓘ button can never bleed outside bounds
         .frame(maxWidth: .infinity, minHeight: 168, maxHeight: 168)
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
         .sheet(isPresented: $showInfo) {
@@ -65,7 +63,6 @@ struct SessionCard: View {
     private func photoCard(imageName: String, title: String, subtitle: String) -> some View {
         ZStack(alignment: .bottomLeading) {
 
-            // Background image — fixed 168pt, fills width, crops centre
             Image(imageName)
                 .resizable()
                 .scaledToFill()
@@ -73,7 +70,6 @@ struct SessionCard: View {
                 .frame(height: 168)
                 .clipped()
 
-            // Dark gradient overlay
             LinearGradient(
                 colors: [
                     Color.black.opacity(0.0),
@@ -85,7 +81,6 @@ struct SessionCard: View {
             )
             .frame(height: 168)
 
-            // Title + subtitle — bottom left
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
@@ -97,7 +92,6 @@ struct SessionCard: View {
             .padding(.horizontal, Spacing.lg)
             .padding(.bottom, Spacing.lg)
 
-            // Chevron — bottom right
             HStack {
                 Spacer()
                 Image(systemName: "chevron.right")
@@ -114,7 +108,7 @@ struct SessionCard: View {
         )
     }
 
-    // MARK: - Standard card (no photo sessions)
+    // MARK: - Standard card
     private var standardCard: some View {
         HStack(spacing: Spacing.lg) {
             ZStack {
@@ -181,13 +175,11 @@ struct InfoSheet: View {
 
             VStack(spacing: Spacing.xl) {
 
-                // Drag handle
                 Capsule()
                     .fill(Color.appTextMuted.opacity(0.4))
                     .frame(width: 40, height: 4)
                     .padding(.top, Spacing.md)
 
-                // Icon
                 ZStack {
                     Circle()
                         .fill(Color.appTeal.opacity(0.12))
@@ -197,13 +189,11 @@ struct InfoSheet: View {
                         .foregroundStyle(Color.appTeal)
                 }
 
-                // Title
                 Text(title)
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .foregroundStyle(Color.appTextPrimary)
                     .multilineTextAlignment(.center)
 
-                // Description
                 Text(description)
                     .font(.system(size: 17, weight: .regular, design: .rounded))
                     .foregroundStyle(Color.appTextSecondary)
@@ -213,7 +203,6 @@ struct InfoSheet: View {
 
                 Spacer()
 
-                // Close button
                 Button {
                     dismiss()
                 } label: {
