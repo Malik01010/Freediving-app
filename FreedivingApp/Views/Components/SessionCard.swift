@@ -11,6 +11,7 @@ struct SessionCard: View {
             case .breathHoldTest: photoCard(imageName: "breath-hold-hero", title: "Breath Hold Test", subtitle: "Tap to test")
             case .preBreath:      photoCard(imageName: "prebreath-hero",    title: "Pre Breath",       subtitle: "2 min · Controlled breathing")
             case .co2Training:    photoCard(imageName: "co2-hero",          title: "CO₂ Training",     subtitle: "8 rounds · 10 min")
+            case .o2Training:     photoCard(imageName: "o2-hero",           title: "O₂ Training",      subtitle: "8 rounds · 21 min")
             default:              standardCard
             }
         }
