@@ -32,6 +32,8 @@ struct BreathingExerciseView: View {
     @State private var isRunning = false
     @State private var sessionComplete = false
 
+    private let audio = AudioCueService()
+
     private var currentStep: BreathingExerciseStep { steps[stepIndex] }
     private var stepProgress: Double {
         guard currentStep.durationSeconds > 0 else { return 0 }
@@ -166,6 +168,8 @@ struct BreathingExerciseView: View {
 
     private func start() {
         UIApplication.shared.isIdleTimerDisabled = true
+        // Play cue for the very first phase immediately on start
+        playCueForCurrentPhase()
         resume()
     }
 
@@ -198,6 +202,17 @@ struct BreathingExerciseView: View {
         if secondsInStep >= currentStep.durationSeconds {
             secondsInStep = 0
             stepIndex = (stepIndex + 1) % steps.count
+            // Play cue for the new phase
+            playCueForCurrentPhase()
+        }
+    }
+
+    private func playCueForCurrentPhase() {
+        switch currentStep.phase {
+        case .inhale:    audio.playInhaleCue()
+        case .exhale:    audio.playExhaleCue()
+        case .holdFull:  audio.playHoldCue()
+        case .holdEmpty: audio.playHoldCue()
         }
     }
 
