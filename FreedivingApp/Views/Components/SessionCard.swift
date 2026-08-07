@@ -23,11 +23,10 @@ struct SessionCard: View {
             SessionDetailView(sessionType: type, personalBest: personalBest)
         } label: {
             tileContent
+                .frame(maxWidth: .infinity, minHeight: tileHeight, maxHeight: tileHeight)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        // Explicit frame + contentShape so SwiftUI knows the EXACT tap rectangle
-        .frame(maxWidth: .infinity, height: tileHeight)
-        .contentShape(Rectangle())
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
         // ⓘ button floats top-trailing as an overlay — never inside the NavigationLink
         .overlay(alignment: .topTrailing) {
