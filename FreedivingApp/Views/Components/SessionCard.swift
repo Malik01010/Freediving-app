@@ -8,6 +8,8 @@ private let sessionInfo: [SessionType: String] = [
     .squareTable:   "Begin with 5 minutes of square breathing to prepare for the breath hold exercise."
 ]
 
+private let tileHeight: CGFloat = 168
+
 struct SessionCard: View {
     let type: SessionType
     let personalBest: Int
@@ -15,30 +17,22 @@ struct SessionCard: View {
     @State private var showInfo = false
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-
-            // ── Full-tile NavigationLink ──
-            NavigationLink {
-                SessionDetailView(sessionType: type, personalBest: personalBest)
-            } label: {
-                switch type {
-                case .breathHoldTest:  photoCard(imageName: "breath-hold-hero",  title: "Breath Hold Test", subtitle: "Tap to test")
-                case .preBreath:       photoCard(imageName: "prebreath-hero",     title: "Pre Breath",       subtitle: "2 min · Controlled breathing")
-                case .co2Training:     photoCard(imageName: "co2-hero",           title: "CO₂ Training",     subtitle: "8 rounds · 10 min")
-                case .o2Training:      photoCard(imageName: "o2-hero",            title: "O₂ Training",      subtitle: "8 rounds · 21 min")
-                case .emptyLungs:      photoCard(imageName: "empty-lungs-hero",   title: "Empty Lungs",      subtitle: "8 rounds · 18 min")
-                case .squareTable:     photoCard(imageName: "square-table-hero",  title: "Square Table",     subtitle: "5 min")
-                case .pranayama:       photoCard(imageName: "pranayama-hero",     title: "Pranayama",        subtitle: "Alternate nostril breathing")
-                case .diaphragmatic:   photoCard(imageName: "diaphragmatic-hero", title: "Diaphragmatic",    subtitle: "Deep belly breathing")
-                }
-            }
-            .buttonStyle(.plain)
-
-            // ── ⓘ button — sibling of NavigationLink, sits top-right ──
+        // Single flat ZStack — NavigationLink fills the entire 168pt tile.
+        // ⓘ button is an overlay anchored top-trailing AFTER the frame is set.
+        NavigationLink {
+            SessionDetailView(sessionType: type, personalBest: personalBest)
+        } label: {
+            tileContent
+        }
+        .buttonStyle(.plain)
+        // Explicit frame + contentShape so SwiftUI knows the EXACT tap rectangle
+        .frame(maxWidth: .infinity, height: tileHeight)
+        .contentShape(Rectangle())
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+        // ⓘ button floats top-trailing as an overlay — never inside the NavigationLink
+        .overlay(alignment: .topTrailing) {
             if sessionInfo[type] != nil {
-                Button {
-                    showInfo = true
-                } label: {
+                Button { showInfo = true } label: {
                     Image(systemName: "info.circle")
                         .font(.system(size: 20, weight: .medium))
                         .foregroundStyle(Color.white.opacity(0.9))
@@ -50,8 +44,6 @@ struct SessionCard: View {
                 .padding(Spacing.md)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 168, maxHeight: 168)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
         .sheet(isPresented: $showInfo) {
             if let infoText = sessionInfo[type] {
                 InfoSheet(title: type.rawValue, description: infoText)
@@ -59,107 +51,60 @@ struct SessionCard: View {
         }
     }
 
-    // MARK: - Photo hero card
-    private func photoCard(imageName: String, title: String, subtitle: String) -> some View {
-        ZStack(alignment: .bottomLeading) {
+    // MARK: - Tile content (visual only — no tap logic here)
+    @ViewBuilder
+    private var tileContent: some View {
+        switch type {
+        case .breathHoldTest:  photoTile(imageName: "breath-hold-hero",  title: "Breath Hold Test", subtitle: "Tap to test")
+        case .preBreath:       photoTile(imageName: "prebreath-hero",     title: "Pre Breath",       subtitle: "2 min · Controlled breathing")
+        case .co2Training:     photoTile(imageName: "co2-hero",           title: "CO₂ Training",     subtitle: "8 rounds · 10 min")
+        case .o2Training:      photoTile(imageName: "o2-hero",            title: "O₂ Training",      subtitle: "8 rounds · 21 min")
+        case .emptyLungs:      photoTile(imageName: "empty-lungs-hero",   title: "Empty Lungs",      subtitle: "8 rounds · 18 min")
+        case .squareTable:     photoTile(imageName: "square-table-hero",  title: "Square Table",     subtitle: "5 min")
+        case .pranayama:       photoTile(imageName: "pranayama-hero",     title: "Pranayama",        subtitle: "Alternate nostril breathing")
+        case .diaphragmatic:   photoTile(imageName: "diaphragmatic-hero", title: "Diaphragmatic",    subtitle: "Deep belly breathing")
+        }
+    }
 
+    // MARK: - Photo tile (pure visuals)
+    private func photoTile(imageName: String, title: String, subtitle: String) -> some View {
+        ZStack(alignment: .bottomLeading) {
+            // Hero image — fills exactly 168pt, no overflow
             Image(imageName)
                 .resizable()
                 .scaledToFill()
-                .frame(maxWidth: .infinity)
-                .frame(height: 168)
+                .frame(maxWidth: .infinity, maxHeight: tileHeight)
                 .clipped()
 
+            // Gradient
             LinearGradient(
-                colors: [
-                    Color.black.opacity(0.0),
-                    Color.black.opacity(0.5),
-                    Color.black.opacity(0.78)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
+                colors: [.black.opacity(0.0), .black.opacity(0.5), .black.opacity(0.78)],
+                startPoint: .top, endPoint: .bottom
             )
-            .frame(height: 168)
 
+            // Title + subtitle
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(.white)
                 Text(subtitle)
                     .font(.system(size: 15, weight: .regular, design: .rounded))
-                    .foregroundStyle(Color.white.opacity(0.75))
+                    .foregroundStyle(.white.opacity(0.75))
             }
             .padding(.horizontal, Spacing.lg)
             .padding(.bottom, Spacing.lg)
 
+            // Chevron bottom-right
             HStack {
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Color.white.opacity(0.7))
+                    .foregroundStyle(.white.opacity(0.7))
                     .padding(Spacing.lg)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 168, maxHeight: 168)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: Radius.md)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
-        )
-    }
-
-    // MARK: - Standard card
-    private var standardCard: some View {
-        HStack(spacing: Spacing.lg) {
-            ZStack {
-                Circle()
-                    .fill(Color.appTeal.opacity(0.12))
-                    .frame(width: 104, height: 104)
-                Image(systemName: type.icon)
-                    .font(.system(size: 44, weight: .medium))
-                    .foregroundStyle(Color.appTeal)
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text(type.rawValue)
-                    .font(.system(size: 22, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.appTextPrimary)
-
-                HStack(spacing: 6) {
-                    if type.rounds > 0 {
-                        Text("\(type.rounds) rounds")
-                            .font(.system(size: 15, weight: .regular, design: .rounded))
-                            .foregroundStyle(Color.appTextSecondary)
-                        Text("·")
-                            .font(.system(size: 15, design: .rounded))
-                            .foregroundStyle(Color.appTextMuted)
-                    }
-                    if type.totalDurationMinutes > 0 {
-                        Text("\(type.totalDurationMinutes) min")
-                            .font(.system(size: 15, weight: .regular, design: .rounded))
-                            .foregroundStyle(Color.appTextSecondary)
-                    } else {
-                        Text("Tap to test")
-                            .font(.system(size: 15, weight: .regular, design: .rounded))
-                            .foregroundStyle(Color.appTextSecondary)
-                    }
-                }
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(Color.appTextMuted)
-        }
-        .padding(.horizontal, Spacing.lg)
-        .frame(maxWidth: .infinity, minHeight: 168, maxHeight: 168)
-        .background(Color.appCard)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: Radius.md)
-                .stroke(Color.appTextMuted.opacity(0.15), lineWidth: 1)
-        )
+        // Tile is exactly tileHeight — nothing can grow it
+        .frame(maxWidth: .infinity, maxHeight: tileHeight)
     }
 }
 
@@ -172,9 +117,7 @@ struct InfoSheet: View {
     var body: some View {
         ZStack {
             Color.appBackground.ignoresSafeArea()
-
             VStack(spacing: Spacing.xl) {
-
                 Capsule()
                     .fill(Color.appTextMuted.opacity(0.4))
                     .frame(width: 40, height: 4)
@@ -203,9 +146,7 @@ struct InfoSheet: View {
 
                 Spacer()
 
-                Button {
-                    dismiss()
-                } label: {
+                Button { dismiss() } label: {
                     Text("Got it")
                         .font(.system(size: 17, weight: .semibold, design: .rounded))
                         .foregroundStyle(Color.appBackground)
