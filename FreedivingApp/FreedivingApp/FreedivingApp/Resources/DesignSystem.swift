@@ -78,3 +78,28 @@ enum Radius {
     static let lg: CGFloat = 20
     static let xl: CGFloat = 28
 }
+
+// MARK: - Bundle helpers
+extension Bundle {
+    var appVersion: String {
+        infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }
+    var buildNumber: String {
+        infoDictionary?["CFBundleVersion"] as? String ?? "1"
+    }
+}
+
+// MARK: - Int time formatting
+extension Int {
+    var formattedTime: String {
+        let m = self / 60
+        let s = self % 60
+        return String(format: "%d:%02d", m, s)
+    }
+    var shortFormattedTime: String {
+        let m = self / 60
+        let s = self % 60
+        if m > 0 { return "\(m)m \(s)s" }
+        return "\(s)s"
+    }
+}

@@ -66,7 +66,14 @@ struct SettingsView: View {
                             Label("Version", systemImage: "info.circle")
                                 .foregroundStyle(Color.appTextPrimary)
                             Spacer()
-                            Text("1.0.0")
+                            Text(Bundle.main.appVersion)
+                                .foregroundStyle(Color.appTextMuted)
+                        }
+                        HStack {
+                            Label("Build", systemImage: "hammer")
+                                .foregroundStyle(Color.appTextPrimary)
+                            Spacer()
+                            Text(Bundle.main.buildNumber)
                                 .foregroundStyle(Color.appTextMuted)
                         }
                     } header: {
