@@ -16,8 +16,8 @@ struct SessionCard: View {
     @State private var showInfo = false
 
     var body: some View {
-        // The card image/content is the tappable area.
-        // The ⓘ button floats on top in a ZStack — completely separate from the main tap.
+        // Outer ZStack is locked to exactly 168pt — nothing bleeds into adjacent tiles.
+        // ⓘ button is a sibling of the main Button, not nested inside it.
         ZStack(alignment: .topTrailing) {
 
             // ── Main tappable card ──
@@ -35,7 +35,7 @@ struct SessionCard: View {
             }
             .buttonStyle(.plain)
 
-            // ── ⓘ button — floats top-right, completely outside the main Button ──
+            // ── ⓘ button — sits inside the 168pt ZStack, top-right corner ──
             if sessionInfo[type] != nil {
                 Button {
                     showInfo = true
@@ -51,6 +51,9 @@ struct SessionCard: View {
                 .padding(Spacing.md)
             }
         }
+        // Hard lock the whole tile to 168pt — ⓘ button can never bleed outside bounds
+        .frame(maxWidth: .infinity, minHeight: 168, maxHeight: 168)
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
         .sheet(isPresented: $showInfo) {
             if let infoText = sessionInfo[type] {
                 InfoSheet(title: type.rawValue, description: infoText)
